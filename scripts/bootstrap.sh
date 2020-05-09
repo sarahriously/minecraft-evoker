@@ -5,6 +5,7 @@ MC_HOME="/home/$USERNAME"
 REMOTE_SERVER_FILE=`cat /var/lib/cloud/data/server_filename`
 BUCKET_NAME=`cat /var/lib/cloud/data/bucket_name`
 SERVER_NAME=`cat /var/lib/cloud/data/server_name`
+REGION=`cat /var/lib/cloud/data/region`
 
 install_updates() {
   sudo yum update -y
@@ -88,7 +89,7 @@ configure_crontab() {
 }
 
 associate_eip() {
-  aws ec2 --region us-east-1 associate-address --instance-id `cat /var/lib/cloud/data/instance-id` --allocation-id `cat /var/lib/cloud/data/eip`
+  aws ec2 --region $REGION associate-address --instance-id `cat /var/lib/cloud/data/instance-id` --allocation-id `cat /var/lib/cloud/data/eip`
 }
 
 install_updates

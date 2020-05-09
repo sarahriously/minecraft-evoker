@@ -308,6 +308,7 @@
           "echo ", { "Fn::GetAtt" : [ "ServerIP", "AllocationId" ]}, " > /var/lib/cloud/data/eip\n",
           "echo '", { "Ref" : "BucketName" }, "' > /var/lib/cloud/data/bucket_name\n",
           "echo '", { "Ref" : "ServerName" }, "' > /var/lib/cloud/data/server_name\n",
+          "echo '", { "Ref" : "AWS::Region" }, "' > /var/lib/cloud/data/region\n",
           "echo '", { "Ref" : "ServerFilename" }, "' > /var/lib/cloud/data/server_filename\n",
           "echo '", { "Fn::FindInMap" : [ "InstanceConfigs", { "Ref" : "InstanceType" }, "MaxHeap" ] }, "' > /var/lib/cloud/data/max_heap\n",
           "echo '", { "Fn::FindInMap" : [ "InstanceConfigs", { "Ref" : "InstanceType" }, "MinHeap" ] }, "' > /var/lib/cloud/data/min_heap\n",
