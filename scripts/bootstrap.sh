@@ -6,6 +6,7 @@ REMOTE_SERVER_FILE=`cat /var/lib/cloud/data/server_filename`
 BUCKET_NAME=`cat /var/lib/cloud/data/bucket_name`
 SERVER_NAME=`cat /var/lib/cloud/data/server_name`
 REGION=`cat /var/lib/cloud/data/region`
+CONFIGS=`cat /var/lib/cloud/data/config_artifacts | sed 's/,//g' | sed 's/\//.zip/g'`
 
 install_updates() {
   sudo yum update -y
@@ -45,12 +46,17 @@ download_world() {
 download_configs() {
   local remote_dir="s3://$BUCKET_NAME/servers/$SERVER_NAME/configs/"
   aws s3 ls $remote_dir > /tmp/s3-config-list.tmp
-  for file in "banned-ips.json" "banned-players.json" "bukkit.yml" "commands.yml" "eula.txt" "help.yml" "ops.json" "permissions.yml" "server.properties" "spigot.yml" "whitelist.json"; do
+  for file in $(echo $CONFIGS); do
     if (cat /tmp/s3-config-list.tmp | grep -Fq "$file"); then
       local local_file="$MC_HOME/$file"
       echo "Copying $file from s3 to $MC_HOME"
       aws s3 cp "$remote_dir$file" "$local_file"
       chown $USERNAME "$local_file"
+      if [[ "$local_file" = *\.zip ]]; then
+        echo "Unzipping file"
+        unzip $local_file -d $MC_HOME
+        rm $local_file
+      fi
     fi
   done
 }
@@ -89,7 +95,7 @@ configure_crontab() {
 }
 
 associate_eip() {
-  aws ec2 --region $REGION associate-address --instance-id `cat /var/lib/cloud/data/instance-id` --allocation-id `cat /var/lib/cloud/data/eip`
+  aws ec2 --region $REGION associate-address --instance-id `cat /var/lib/cloud/data/instance-id` --allocation-id `cat /var/lib/cloud/data/eip` &> /tmp/eipout
 }
 
 install_updates

@@ -30,5 +30,11 @@
   {
     "ParameterKey": "SpotBid",
     "ParameterValue": "0.01"
+  },
+  {
+    "ParameterKey": "ConfigArtifacts",
+    "ParameterValue": [
+      "banned-ips.json, banned-players.json, bukkit.yml, commands.yml, eula.txt, help.yml, ops.json, permissions.yml, server.properties, spigot.yml, whitelist.json"
+    ]
   }
 ]

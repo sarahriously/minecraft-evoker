@@ -23,6 +23,7 @@ SERVER_NAME=`cat /var/lib/cloud/data/server_name`
 MC_HOME="/home/$USERNAME"
 BACKUPPATH="$MC_HOME/backups"
 WORLD='world'
+CONFIGS=`cat /var/lib/cloud/data/config_artifacts | sed 's/,//g'`
 
 # Server
 SERVICE='server.jar'
@@ -147,11 +148,17 @@ mc_backup_config() {
 
    local remote_dir="s3://$BUCKET_NAME/servers/$SERVER_NAME/configs/"
    ls -l > /tmp/local-config-list.tmp
-   for file in "banned-ips.json" "banned-players.json" "bukkit.yml" "commands.yml" "eula.txt" "help.yml" "ops.json" "permissions.yml" "server.properties" "spigot.yml" "whitelist.json"; do
+   for file in $(echo $CONFIGS); do
      if (cat /tmp/local-config-list.tmp | grep -Fq "$file"); then
        local local_file="$MC_HOME/$file"
-       echo "Copying $file from $MC_HOME to s3"
-       aws s3 cp "$local_file" "$remote_dir$file"
+       if [[ -d $local_file ]]; then
+        zip -r "$file.zip" $local_file
+        echo "Copying zipped directory $file.zip from $MC_HOME to s3"
+        aws s3 cp "$local_file.zip" "$remote_dir$file.zip"
+       else
+        echo "Copying $file from $MC_HOME to s3"
+        aws s3 cp "$local_file" "$remote_dir$file"
+       fi
      fi
    done
 
