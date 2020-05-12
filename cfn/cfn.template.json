@@ -91,7 +91,7 @@
       "m4.4xlarge"  : { "Arch" : "HVM64" },
       "m4.large"    : { "Arch" : "HVM64" },
       "m4.xlarge"   : { "Arch" : "HVM64" },
-      "m5.large"    : { "Arch" : "HVM64", "CPUs" : 2, "MaxHeap" : 7000, "MinHeap" : 7000 },
+      "m5.large"    : { "Arch" : "HVM64", "CPUs" : 2, "MaxHeap" : 6700, "MinHeap" : 6700 },
       "r3.2xlarge"  : { "Arch" : "HVM64" },
       "r3.4xlarge"  : { "Arch" : "HVM64" },
       "r3.8xlarge"  : { "Arch" : "HVM64" },
