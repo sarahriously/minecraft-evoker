@@ -30,12 +30,12 @@ download_world() {
   mkdir -p $MC_HOME/backups
   chown -R $USERNAME $MC_HOME/backups
   local remote_dir="s3://$BUCKET_NAME/servers/$SERVER_NAME/world_backups/"
-  local file_name='current.tgz'
+  local file_name='current.zip'
   if (aws s3 ls $remote_dir | grep -Fq "$file_name"); then
-    local local_file="/tmp/world.tgz"
+    local local_file="/tmp/world.zip"
     echo "Found latest world backup. Downloading."
     aws s3 cp "$remote_dir$file_name" "$local_file"
-    tar -xzf "$local_file" -C "$MC_HOME"
+    unzip $local_file -d $MC_HOME
     rm $local_file
     chown -R $USERNAME "$MC_HOME/world"
   else
