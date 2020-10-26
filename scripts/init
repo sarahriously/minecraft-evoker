@@ -15,12 +15,12 @@
 ### END INIT INFO
 
 SCREENNAME='minecraft'
-USERNAME='minecraft'
+USERNAME='root'
 
 # Paths
 BUCKET_NAME=`cat /var/lib/cloud/data/bucket_name`
 SERVER_NAME=`cat /var/lib/cloud/data/server_name`
-MC_HOME="/home/$USERNAME"
+MC_HOME="/home/minecraft"
 BACKUPPATH="$MC_HOME/backups"
 WORLD='world'
 CONFIGS=`cat /var/lib/cloud/data/config_artifacts | sed 's/,//g' | sed 's/\///g'` 
@@ -34,22 +34,13 @@ CPU_COUNT=`cat /var/lib/cloud/data/cpus`
 HISTORY=1024
 INVOCATION="/usr/lib/jvm/jre-1.8.0-openjdk.x86_64/bin/java -Xmx${MAXHEAP}M -Xms${MINHEAP}M -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalPacing -XX:ParallelGCThreads=${CPU_COUNT} -XX:+AggressiveOpts -jar $SERVICE $OPTIONS"
 
-ME=`whoami`
-as_user() {
-  if [ "$ME" = "$USERNAME" ] ; then
-    bash -c "$1"
-  else
-    su - "$USERNAME" -s/bin/bash -c "$1"
-  fi
-}
-
 mc_start() {
   if  pgrep -u $USERNAME -f $SERVICE > /dev/null ; then
     echo "The server is already running!"
   else
     echo "Starting the server..."
     cd $MC_HOME
-    as_user "cd $MC_HOME && screen -h $HISTORY -dmS ${SCREENNAME} $INVOCATION"
+    cd $MC_HOME && screen -h $HISTORY -dmS ${SCREENNAME} $INVOCATION
     sleep 7
     if pgrep -u $USERNAME -f $SERVICE > /dev/null ; then
       echo "The server is now running."
@@ -62,8 +53,8 @@ mc_start() {
 mc_saveoff() {
   if pgrep -u $USERNAME -f $SERVICE > /dev/null ; then
     echo "The server is running... suspending saves"
-    as_user "screen -p 0 -S ${SCREENNAME} -X eval 'stuff \"save-off\"\015'"
-    as_user "screen -p 0 -S ${SCREENNAME} -X eval 'stuff \"save-all\"\015'"
+    screen -p 0 -S ${SCREENNAME} -X eval 'stuff "save-off"\015'
+    screen -p 0 -S ${SCREENNAME} -X eval 'stuff "save-all"\015'
     sync
     sleep 10
   else
@@ -74,7 +65,7 @@ mc_saveoff() {
 mc_saveon() {
   if pgrep -u $USERNAME -f $SERVICE > /dev/null ; then
     echo "The server is running... re-enabling saves"
-    as_user "screen -p 0 -S ${SCREENNAME} -X eval 'stuff \"save-on\"\015'"
+    screen -p 0 -S ${SCREENNAME} -X eval 'stuff "save-on"\015'
   else
     echo "The server is not running. Not resuming saves."
   fi
@@ -83,10 +74,10 @@ mc_saveon() {
 mc_stop() {
   if pgrep -u $USERNAME -f $SERVICE > /dev/null ; then
     echo "Stopping the server"
-    as_user "screen -p 0 -S ${SCREENNAME} -X eval 'stuff \"say SERVER SHUTTING DOWN IN 10 SECONDS. Saving map...\"\015'"
-    as_user "screen -p 0 -S ${SCREENNAME} -X eval 'stuff \"save-all\"\015'"
+    screen -p 0 -S ${SCREENNAME} -X eval 'stuff "say SERVER SHUTTING DOWN IN 10 SECONDS. Saving map..."\015'
+    screen -p 0 -S ${SCREENNAME} -X eval 'stuff "save-all"\015'
     sleep 10
-    as_user "screen -p 0 -S ${SCREENNAME} -X eval 'stuff \"stop\"\015'"
+    screen -p 0 -S ${SCREENNAME} -X eval 'stuff "stop"\015'
     sleep 7
   else
     echo "The server was not running."
@@ -111,7 +102,7 @@ mc_backup_world() {
   local backup_file="$BACKUPPATH/backup.zip"
   echo "Backing up minecraft world..."
   rm -f $backup_file
-  as_user "nice -n 19 zip -r \"$backup_file.zip\" $WORLD*"
+  nice -n 19 zip -r "$backup_file.zip" $WORLD*
 
   mc_saveon
 

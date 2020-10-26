@@ -1,7 +1,7 @@
 #!/bin/bash -x
 
-USERNAME='minecraft'
-MC_HOME="/home/$USERNAME"
+USERNAME='root'
+MC_HOME="/home/minecraft"
 REMOTE_SERVER_FILE=`cat /var/lib/cloud/data/server_filename`
 BUCKET_NAME=`cat /var/lib/cloud/data/bucket_name`
 SERVER_NAME=`cat /var/lib/cloud/data/server_name`
@@ -78,7 +78,7 @@ configure_subsystem() {
 }
 
 add_crontab_line() {
-  local line=$1
+  local line=$1 
   if (crontab -u $USERNAME -l | grep -Fq "$line"); then
     echo "Backups already in crontab. Skipping."
   else

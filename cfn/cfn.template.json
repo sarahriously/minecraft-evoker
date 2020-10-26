@@ -24,7 +24,7 @@
     "OperatorEMail": {
       "Description": "EMail address to notify if there are any scaling operations",
       "Type": "String",
-      "AllowedPattern": "([a-zA-Z0-9_\\-\\.]+)@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.)|(([a-zA-Z0-9\\-]+\\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\\]?)",
+      "AllowedPattern": "([a-zA-Z0-9_\\-\\.]+)@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.)|(([a-zA-Z0-9\\-]+\\.)+))([a-zA-Z]{2,10}|[0-9]{1,3})(\\]?)",
       "ConstraintDescription": "must be a valid email address."
     },
 
@@ -119,7 +119,7 @@
       }
     },
 
-    "ServerIP2" : {
+    "ServerIP3" : {
       "Type" : "AWS::EC2::EIP"
     },
 
@@ -157,6 +157,23 @@
                 ],
                 "Resource" : "*"
               } ]
+            }
+          },
+          {
+            "PolicyName" : "CloudWatchMetrics",
+            "PolicyDocument" : {
+              "Statement": [
+                {
+                  "Action": [
+                    "cloudwatch:*", 
+                    "ec2:DescribeInstances", 
+                    "ec2:DescribeImages",
+                    "ec2:DescribeTags"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*"
+                }
+              ]
             }
           },
           {
@@ -231,7 +248,14 @@
       "Metadata" : {
         "Comment" : "Install a simple application",
         "AWS::CloudFormation::Init" : {
-          "config" : {
+          "configSets" : {
+            "default" : [
+              "initConfig",
+              "configCloudWatch",
+              "restartCloudWatch"
+            ]
+          },
+          "initConfig" : {
             "packages" : {
               "yum" : {
                 "htop": [],
@@ -279,6 +303,48 @@
                 "homeDir" : "/home/minecraft"
               }
             }
+          },
+          "configCloudWatch" : {
+            "files" : {
+              "/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json" : {
+                "content" : { "Fn::Join" : ["", [
+                  "{",
+                  "        \"metrics\": {",
+                  "                \"append_dimensions\": {",
+                  "                        \"AutoScalingGroupName\": \"${aws:AutoScalingGroupName}\",",
+                  "                        \"ImageId\": \"${aws:ImageId}\",",
+                  "                        \"InstanceId\": \"${aws:InstanceId}\",",
+                  "                        \"InstanceType\": \"${aws:InstanceType}\"",
+                  "                },",
+                  "                \"metrics_collected\": {",
+                  "                        \"disk\": {",
+                  "                                \"measurement\": [",
+                  "                                        \"used_percent\"",
+                  "                                ],",
+                  "                                \"metrics_collection_interval\": 60,",
+                  "                                \"resources\": [",
+                  "                                        \"/\"",
+                  "                                ]",
+                  "                        },",
+                  "                        \"mem\": {",
+                  "                                \"measurement\": [",
+                  "                                        \"mem_used_percent\"",
+                  "                                ],",
+                  "                                \"metrics_collection_interval\": 60",
+                  "                        }",
+                  "                }",
+                  "        }",
+                  "}"
+                ]]}
+              }
+            }
+          },
+          "restartCloudWatch" : {
+            "commands": {
+              "startService" : {
+                "command": "sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s"
+              }
+            }
           }
         }
       },
@@ -300,18 +366,21 @@
         "IamInstanceProfile": { "Ref": "MinecraftInstanceProfile" },
         "InstanceType" : { "Ref" : "InstanceType" },
         "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
-          "#!/bin/bash -xe\n",
+          "#!/bin/bash\n",
+          "/bin/bash -cx \"",
           "yum update -y aws-cfn-bootstrap\n",
 
-          "/opt/aws/bin/cfn-init -v ",
-          "         --stack ", { "Ref" : "AWS::StackName" },
-          "         --resource LaunchConfig ",
-          "         --region ", { "Ref" : "AWS::Region" }, "\n",
+          "sudo rpm -i https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm\n",
+
+          "/opt/aws/bin/cfn-init -v -c default",
+          " -s ", { "Ref" : "AWS::StackName" },
+          " -r LaunchConfig",
+          " --region ", { "Ref" : "AWS::Region" }, " &> /tmp/cfnout.txt\n",
 
           "mkdir -p /home/minecraft\n",
           "chown minecraft /home/minecraft\n",
 
-          "echo ", { "Fn::GetAtt" : [ "ServerIP2", "AllocationId" ]}, " > /var/lib/cloud/data/eip\n",
+          "echo ", { "Fn::GetAtt" : [ "ServerIP3", "AllocationId" ]}, " > /var/lib/cloud/data/eip\n",
           "echo '", { "Ref" : "BucketName" }, "' > /var/lib/cloud/data/bucket_name\n",
           "echo '", { "Ref" : "ServerName" }, "' > /var/lib/cloud/data/server_name\n",
           "echo '", { "Ref" : "AWS::Region" }, "' > /var/lib/cloud/data/region\n",
@@ -333,7 +402,7 @@
           "/opt/aws/bin/cfn-signal -e $? ",
           "         --stack ", { "Ref" : "AWS::StackName" },
           "         --resource WebServerGroup ",
-          "         --region ", { "Ref" : "AWS::Region" }, "\n"
+          "         --region ", { "Ref" : "AWS::Region" }, "\n\" &> /tmp/bashoot.out"
         ]]}}
       }
     },
@@ -361,9 +430,9 @@
   },
 
   "Outputs" : {
-    "ServerIP2" : {
+    "ServerIP3" : {
       "Description" : "The ip of your server",
-      "Value" : { "Ref" : "ServerIP2" }
+      "Value" : { "Ref" : "ServerIP3" }
     }
   }
 }
