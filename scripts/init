@@ -97,7 +97,8 @@ mc_backup_world() {
     echo "Failed to lock lockfile"
     exit 1
   fi
-
+  screen -p 0 -S ${SCREENNAME} -X eval 'stuff "say [Backup] Backup starting in 10 seconds, prepare for lag..."\015'
+  sleep 10
   mc_saveoff
   local backup_file="$BACKUPPATH/backup.zip"
   echo "Backing up minecraft world..."
@@ -119,6 +120,7 @@ mc_backup_world() {
   echo "Removing lockfile"
   rm -f "$BACKUPPATH/backup.lock"
   echo "Done."
+  screen -p 0 -S ${SCREENNAME} -X eval 'stuff "say [Backup] Backup now complete :)"\015'
   popd
 }
 

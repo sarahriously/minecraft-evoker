@@ -166,9 +166,17 @@
                 {
                   "Action": [
                     "cloudwatch:*", 
-                    "ec2:DescribeInstances", 
                     "ec2:DescribeImages",
-                    "ec2:DescribeTags"
+                    "ec2:DescribeTags",
+                    "ec2:DescribeInstanceStatus",
+                    "ec2:DescribeInstances",
+                    "ec2:DescribeSnapshots",
+                    "ec2:DescribeVolumeStatus",
+                    "ec2:DescribeVolumes",
+                    "ec2:RebootInstances",
+                    "ec2:StopInstances",
+                    "ec2:TerminateInstances",
+                    "ec2:CreateSnapshot"
                   ],
                   "Effect": "Allow",
                   "Resource": "*"
@@ -309,13 +317,17 @@
               "/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json" : {
                 "content" : { "Fn::Join" : ["", [
                   "{",
+                  "        \"agent\": {",
+                  "           \"omit_hostname\": true",
+                  "        },",
                   "        \"metrics\": {",
-                  "                \"append_dimensions\": {",
-                  "                        \"AutoScalingGroupName\": \"${aws:AutoScalingGroupName}\",",
-                  "                        \"ImageId\": \"${aws:ImageId}\",",
-                  "                        \"InstanceId\": \"${aws:InstanceId}\",",
-                  "                        \"InstanceType\": \"${aws:InstanceType}\"",
+                  "                \"append_dimensions\":{",
+                  "                    \"AutoScalingGroupName\":\"${aws:AutoScalingGroupName}\",",
+                  "                    \"ImageId\":\"${aws:ImageId}\",",
+                  "                    \"InstanceId\":\"${aws:InstanceId}\",",
+                  "                    \"InstanceType\":\"${aws:InstanceType}\"",
                   "                },",
+                  "                \"namespace\": \"CWAgent\",",
                   "                \"metrics_collected\": {",
                   "                        \"disk\": {",
                   "                                \"measurement\": [",

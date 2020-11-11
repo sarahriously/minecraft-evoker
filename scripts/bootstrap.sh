@@ -89,8 +89,8 @@ add_crontab_line() {
 
 configure_crontab() {
   add_crontab_line "*/5 * * * * /etc/init.d/minecraft start"
-  add_crontab_line "0,30 * * * * /etc/init.d/minecraft backup_world"
-  add_crontab_line "1,31 * * * * /etc/init.d/minecraft backup_config"
+  add_crontab_line "0,10,20,30,40,50 * * * * /etc/init.d/minecraft backup_world"
+  add_crontab_line "1,11,21,31,41,51 * * * * /etc/init.d/minecraft backup_config"
   add_crontab_line "10 0 * * * /etc/init.d/minecraft backup_copy"
 }
 
