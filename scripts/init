@@ -192,7 +192,7 @@ case "$1" in
     ;;
 
   *)
-  echo "Usage: $0 {start|stop|backup|status|restart \"server command\"}"
+  echo "Usage: $0 {start|stop|backup_world|backup_config|backup_copy|status|restart \"server command\"}"
   exit 1
   ;;
 esac

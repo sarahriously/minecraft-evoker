@@ -401,15 +401,23 @@
           "echo '", { "Fn::FindInMap" : [ "InstanceConfigs", { "Ref" : "InstanceType" }, "MaxHeap" ] }, "' > /var/lib/cloud/data/max_heap\n",
           "echo '", { "Fn::FindInMap" : [ "InstanceConfigs", { "Ref" : "InstanceType" }, "MinHeap" ] }, "' > /var/lib/cloud/data/min_heap\n",
           "echo '", { "Fn::FindInMap" : [ "InstanceConfigs", { "Ref" : "InstanceType" }, "CPUs" ] }, "' > /var/lib/cloud/data/cpus\n",
-
+          
+          { "Fn::Join" : ["", [
+            "aws s3 cp s3://",
+            { "Ref" : "BucketName" },
+            "/common/scripts/termination-watchdog.sh ",
+            "/tmp/termination-watchdog.sh"
+          ]]}, "\n",
           { "Fn::Join" : ["", [
             "aws s3 cp s3://",
             { "Ref" : "BucketName" },
             "/common/scripts/bootstrap.sh ",
             "/tmp/mc-bootstrap.sh"
           ]]}, "\n",
+          "chmod +x /tmp/termination-watchdog.sh\n",
           "chmod +x /tmp/mc-bootstrap.sh\n",
           "/tmp/mc-bootstrap.sh &> /tmp/mc-bootstrap-out.txt\n",
+          "nohup /tmp/termination-watchdog.sh &> /tmp/watchdog-out.txt &\n",
 
           "/opt/aws/bin/cfn-signal -e $? ",
           "         --stack ", { "Ref" : "AWS::StackName" },
